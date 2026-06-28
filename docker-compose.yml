@@ -1,0 +1,45 @@
+# Standalone compose for the Sync plugin + its database.
+#
+# The plugin needs a running ApiCoreX Core to register with (CORE_URL) and the
+# Identity plugin to have created the tenant schemas. For an all-in-one stack
+# use the compose file in the apicorex (Core) repo instead.
+#
+#   docker compose up --build
+#
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: apicorex
+      POSTGRES_PASSWORD: apicorex
+      POSTGRES_DB: apicorex
+    ports:
+      - "5432:5432"
+    volumes:
+      - sync_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U apicorex"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  sync:
+    build: .
+    environment:
+      DATABASE_URL: postgres://apicorex:apicorex@postgres:5432/apicorex?sslmode=disable
+      PLUGIN_API_KEY: change-me-plugin-key
+      CORE_URL: http://host.docker.internal:8080
+      PLUGIN_ADDR: ":50052"
+      PLUGIN_BASE_URL: http://sync:50052
+      # Optional: comma-separated tenant-wide collections.
+      # SYNC_SHARED_COLLECTIONS: org_settings,catalog
+    ports:
+      - "50052:50052"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+volumes:
+  sync_pgdata:

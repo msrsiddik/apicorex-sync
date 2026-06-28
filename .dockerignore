@@ -1,0 +1,27 @@
+# Local env & secrets
+.env
+*.env
+!.env.example
+
+# Build artifacts
+tmp/
+bin/
+dist/
+*.exe
+
+# Editor / OS
+.idea/
+.vscode/
+.DS_Store
+
+# VCS & CI
+.git/
+.github/
+
+# Local tooling
+.air.toml
+.remember/
+.claude/
+
+# Docs not needed in image
+*.md

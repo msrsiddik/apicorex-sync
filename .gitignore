@@ -1,0 +1,23 @@
+# Local env & secrets — never commit
+.env
+*.env
+!.env.example
+
+# Build artifacts
+tmp/
+bin/
+dist/
+*.exe
+*.out
+
+# Local config override (commit only .example)
+config.yaml
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/
+
+# Local tooling state
+.remember/
+.claude/
