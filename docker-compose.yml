@@ -1,32 +1,20 @@
-# Standalone compose for the Sync plugin + its database.
+# Standalone compose for the Sync plugin.
 #
-# The plugin needs a running ApiCoreX Core to register with (CORE_URL) and the
-# Identity plugin to have created the tenant schemas. For an all-in-one stack
-# use the compose file in the apicorex (Core) repo instead.
+# Connects to the SHARED Postgres run from the apicorex (Core) repo's
+# docker-compose.yml, exposed on the host at 55432. Start that stack first:
 #
+#   cd ../apicorex && docker compose up -d postgres
 #   docker compose up --build
 #
+# The plugin also needs a running ApiCoreX Core to register with (CORE_URL,
+# also run from the apicorex repo's docker-compose.yml) and the Identity
+# plugin to have created the tenant schemas.
+#
 services:
-  postgres:
-    image: postgres:16-alpine
-    environment:
-      POSTGRES_USER: apicorex
-      POSTGRES_PASSWORD: apicorex
-      POSTGRES_DB: apicorex
-    ports:
-      - "5432:5432"
-    volumes:
-      - sync_pgdata:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U apicorex"]
-      interval: 5s
-      timeout: 3s
-      retries: 10
-
   sync:
     build: .
     environment:
-      DATABASE_URL: postgres://apicorex:apicorex@postgres:5432/apicorex?sslmode=disable
+      DATABASE_URL: postgres://apicorex:apicorex@host.docker.internal:55432/apicorex?sslmode=disable
       PLUGIN_API_KEY: change-me-plugin-key
       CORE_URL: http://host.docker.internal:8080
       PLUGIN_ADDR: ":50052"
@@ -35,11 +23,5 @@ services:
       # SYNC_SHARED_COLLECTIONS: org_settings,catalog
     ports:
       - "50052:50052"
-    depends_on:
-      postgres:
-        condition: service_healthy
     extra_hosts:
       - "host.docker.internal:host-gateway"
-
-volumes:
-  sync_pgdata:
