@@ -10,8 +10,7 @@ pipeline {
     }
 
     environment {
-        GOFLAGS   = '-mod=mod'
-        IMAGE_TAG = "apicorex-sync:${env.BUILD_NUMBER}"
+        GOFLAGS = '-mod=mod'
     }
 
     stages {
@@ -37,9 +36,12 @@ pipeline {
             }
         }
 
-        stage('Docker Image') {
+        stage('Deploy') {
+            // Builds the image and (re)starts the container via compose. Needs
+            // the shared Postgres (apicorex repo's compose) and Core already
+            // running — compose only depends_on services defined in this file.
             steps {
-                sh "docker build -t ${IMAGE_TAG} -t apicorex-sync:latest ."
+                sh 'docker compose up -d --build'
             }
         }
     }
