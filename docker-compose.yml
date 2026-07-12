@@ -1,7 +1,7 @@
 # Standalone compose for the Sync plugin.
 #
 # Connects to the SHARED Postgres run from the apicorex (Core) repo's
-# docker-compose.yml, exposed on the host at 55432. Start that stack first:
+# docker-compose.yml, exposed on the host at 15432. Start that stack first:
 #
 #   cd ../apicorex && docker compose up -d postgres
 #   docker compose up --build
@@ -15,7 +15,7 @@ services:
     build: .
     restart: unless-stopped
     environment:
-      DATABASE_URL: postgres://apicorex:apicorex@host.docker.internal:55432/apicorex?sslmode=disable
+      DATABASE_URL: postgres://apicorex:apicorex@host.docker.internal:15432/apicorex?sslmode=disable
       PLUGIN_API_KEY: change-me-plugin-key
       CORE_URL: http://host.docker.internal:9999
       PLUGIN_ADDR: ":50052"
