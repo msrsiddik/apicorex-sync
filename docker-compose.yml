@@ -13,10 +13,11 @@
 services:
   sync:
     build: .
+    restart: unless-stopped
     environment:
       DATABASE_URL: postgres://apicorex:apicorex@host.docker.internal:55432/apicorex?sslmode=disable
       PLUGIN_API_KEY: change-me-plugin-key
-      CORE_URL: http://host.docker.internal:8080
+      CORE_URL: http://host.docker.internal:9999
       PLUGIN_ADDR: ":50052"
       PLUGIN_BASE_URL: http://sync:50052
       # Optional: comma-separated tenant-wide collections.
