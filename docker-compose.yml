@@ -22,6 +22,9 @@ services:
       PLUGIN_BASE_URL: http://sync:50052
       # Optional: comma-separated tenant-wide collections.
       # SYNC_SHARED_COLLECTIONS: org_settings,catalog
+      # How long deleted-record tombstones are kept before being purged (Go
+      # duration syntax). Defaults to 90 days if unset.
+      SYNC_TOMBSTONE_RETENTION: "2160h"
     ports:
       - "50052:50052"
     extra_hosts:
