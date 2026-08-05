@@ -1,0 +1,39 @@
+# ApiCoreX Sync plugin — example compose.
+#
+# This is a documented copy of docker-compose.yml showing every override-able
+# env var with its default spelled out (docker-compose.yml itself uses
+# ${VAR:-default} so it works with nothing set). Copy relevant values into a
+# .env file next to docker-compose.yml, or export them before `docker compose
+# up`, or pass them as Jenkins build parameters — do not run this file
+# directly; it exists as reference only. Secrets below are placeholders — do
+# not deploy with them as-is.
+#
+# Connects to the SHARED Postgres run from the apicorex (Core) repo's
+# docker-compose.yml, exposed on the host at 15432. Start that stack first:
+#
+#   cd ../apicorex && docker compose up -d postgres
+#   docker compose up --build
+#
+# The plugin also needs a running ApiCoreX Core to register with (CORE_URL,
+# also run from the apicorex repo's docker-compose.yml) and the Identity
+# plugin to have created the tenant schemas.
+#
+services:
+  sync:
+    build: .
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgres://apicorex:apicorex@host.docker.internal:15432/apicorex?sslmode=disable
+      PLUGIN_API_KEY: change-me-plugin-key
+      CORE_URL: http://host.docker.internal:9999
+      PLUGIN_ADDR: ":50052"
+      PLUGIN_BASE_URL: http://sync:50052
+      # Optional: comma-separated tenant-wide collections.
+      SYNC_SHARED_COLLECTIONS: ""
+      # How long deleted-record tombstones are kept before being purged (Go
+      # duration syntax). Defaults to 90 days if unset.
+      SYNC_TOMBSTONE_RETENTION: "2160h"
+    ports:
+      - "50052:50052"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
