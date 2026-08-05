@@ -52,6 +52,11 @@ Copy `.env.example` to `.env` and fill in your values:
 | `SYNC_SHARED_COLLECTIONS` | no | *(none)* | Comma-separated tenant-wide collections |
 | `SYNC_TOMBSTONE_RETENTION` | no | `2160h` (90d) | Go duration for tombstone GC window |
 
+`SYNC_PORT` is a Docker Compose / Jenkins convenience var, not read by the Go
+binary directly — compose expands it into `PLUGIN_ADDR` and the container's
+port mapping (see below). When running `go run`/the binary directly, set
+`PLUGIN_ADDR` instead.
+
 ## Running
 
 ```sh
@@ -79,14 +84,24 @@ docker compose up --build
 For an all-in-one stack (Core + Postgres + Redis + every plugin) use the
 compose file in the [Core repo](../apicorex) instead.
 
+See [docker-compose.example.yml](./docker-compose.example.yml) for every var
+with its default spelled out. `docker-compose.yml` itself reads each one as
+`${VAR:-default}`, so it runs unchanged with nothing set — export a var, or
+put it in a `.env` file next to the compose file, to override just that one
+(e.g. `SYNC_PORT` to change the port). The Jenkins pipeline exposes the same
+vars as build parameters (blank = compose default).
+
 ## API
 
-Both endpoints require a valid JWT (issued by Identity, verified by Core).
-Core strips the token and injects `X-ApiCoreX-*` headers before forwarding.
+Both endpoints require a valid opaque bearer device token (`zdt_...`, issued
+by Identity, introspected by Core — see the [Core](https://github.com/msrsiddik/apicorex)
+and [Identity](../apicorex-identity) READMEs). Core resolves the token and
+injects `X-ApiCoreX-*` headers before forwarding; this plugin never sees the
+raw token.
 
 ### POST /sync/push
 
-Push a batch of local changes.
+Push a batch of local changes (max 1000 per request).
 
 ```json
 {
@@ -120,7 +135,10 @@ Response:
 }
 ```
 
-`status` values: `applied` | `duplicate` | `stale` | `rejected`.
+`status` values: `applied` | `duplicate` | `stale` | `rejected`. A `rejected`
+result also carries an `error` string (e.g. missing `change_id`, `collection`,
+or `record_id`); `duplicate` and `stale` results carry the existing `version`
+so the client knows what the server already has.
 
 ### GET /sync/pull
 
@@ -178,3 +196,6 @@ Podman) and E2E curl examples.
 ```sh
 go test ./...
 ```
+
+The Jenkins pipeline (see "With Docker" above) runs `go vet` and `go test`
+before building and deploying — no separate CI workflow.
